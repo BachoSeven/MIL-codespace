@@ -16,7 +16,7 @@
 	"lean-toolchain": true,
 	"mathematics_in_lean.pdf": true,
 	"MIL.lean": true,
-	"README.md":true,
+	"README.md":true
     },
     "editor.minimap.enabled": false,
     "editor.acceptSuggestionOnEnter": "off",
