@@ -86,13 +86,28 @@ def conjugate {G : Type*} [Group G] (x : G) (H : Subgroup G) : Subgroup G where
   carrier := {a : G | ∃ h, h ∈ H ∧ a = x * h * x⁻¹}
   one_mem' := by
     dsimp
-    sorry
+    use 1
+    rw [mul_one, mul_right_inv]
+    exact ⟨H.one_mem, rfl⟩
   inv_mem' := by
     dsimp
-    sorry
+    intro y
+    rintro ⟨a, ha⟩
+    use a⁻¹
+    constructor
+    apply inv_mem ha.1
+    rw [ha.2]
+    group
   mul_mem' := by
     dsimp
-    sorry
+    intros a b
+    rintro ⟨c, hc⟩
+    rintro ⟨d, hd⟩
+    use c*d
+    constructor
+    exact mul_mem hc.1 hd.1
+    rw [hc.2, hd.2]
+    group
 
 example {G H : Type*} [Group G] [Group H] (G' : Subgroup G) (f : G →* H) : Subgroup H :=
   Subgroup.map f G'
@@ -117,23 +132,33 @@ variable {G H : Type*} [Group G] [Group H]
 open Subgroup
 
 example (φ : G →* H) (S T : Subgroup H) (hST : S ≤ T) : comap φ S ≤ comap φ T :=by
-  sorry
+  intro x hx
+  apply hST
+  exact hx
 
 example (φ : G →* H) (S T : Subgroup G) (hST : S ≤ T) : map φ S ≤ map φ T :=by
-  sorry
+  intro x hx
+  rcases hx with ⟨y, hy, rfl⟩
+  use y
+  constructor
+  exact hST hy
+  rfl
 
 variable {K : Type*} [Group K]
 
 -- Remember you can use the `ext` tactic to prove an equality of subgroups.
 example (φ : G →* H) (ψ : H →* K) (U : Subgroup K) :
   comap (ψ.comp φ) U = comap φ (comap ψ U) := by
-  sorry
+  ext
+  simp
 
 -- Pushing a subgroup along one homomorphism and then another is equal to
 --  pushing it forward along the composite of the homomorphisms.
 example (φ : G →* H) (ψ : H →* K) (S : Subgroup G) :
   map (ψ.comp φ) S = map ψ (S.map φ) := by
-  sorry
+  ext
+  rw [mem_map, MonoidHom.coe_comp]
+  simp only [Function.comp_apply, exists_exists_and_eq_and]
 
 end exercises
 
@@ -154,13 +179,24 @@ lemma eq_bot_iff_card {G : Type*} [Group G] {H : Subgroup G} [Fintype H] :
     H = ⊥ ↔ card H = 1 := by
   suffices (∀ x ∈ H, x = 1) ↔ ∃ x ∈ H, ∀ a ∈ H, a = x by
     simpa [eq_bot_iff_forall, card_eq_one_iff]
-  sorry
+  constructor
+  intro h
+  use 1
+  constructor
+  exact Subgroup.one_mem H
+  exact h
+  rintro ⟨x, hx, ha⟩
+  intro y hy
+  have hxy : x * y ∈ H := H.mul_mem hx hy
+  specialize ha (x * y) hxy
+  exact mul_right_eq_self.mp ha
 
 #check card_dvd_of_le
 
 lemma inf_bot_of_coprime {G : Type*} [Group G] (H K : Subgroup G) [Fintype H] [Fintype K]
     (h : (card H).Coprime (card K))  : H ⊓ K = ⊥ := by
-    sorry
+    ext
+    rw [ge_iff_le, mem_inf, mem_bot]
 open Equiv
 
 example {X : Type*} [Finite X] : Subgroup.closure {σ : Perm X | Perm.IsCycle σ} = ⊤ :=

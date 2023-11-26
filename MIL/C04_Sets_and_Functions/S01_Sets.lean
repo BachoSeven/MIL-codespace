@@ -48,7 +48,18 @@ example : s ∩ (t ∪ u) ⊆ s ∩ t ∪ s ∩ u := by
   . right; exact ⟨xs, xu⟩
 
 example : s ∩ t ∪ s ∩ u ⊆ s ∩ (t ∪ u) := by
-  sorry
+  simp [subset_def, mem_inter_iff]
+  intros x h
+  constructor
+  rcases h with hs | hu
+  exact hs.1
+  exact hu.1
+  rcases h with hst | hsu
+  left
+  exact hst.2
+  right
+  exact hsu.2
+
 example : (s \ t) \ u ⊆ s \ (t ∪ u) := by
   intro x xstu
   have xs : x ∈ s := xstu.1.1
@@ -118,8 +129,20 @@ example (x : ℕ) (h : x ∈ (∅ : Set ℕ)) : False :=
 example (x : ℕ) : x ∈ (univ : Set ℕ) :=
   trivial
 
+-- suggerimento: Nat.Prime.eq_two_or_odd && Nat.even_iff
 example : { n | Nat.Prime n } ∩ { n | n > 2 } ⊆ { n | ¬Even n } := by
-  sorry
+  rw [subset_def]
+  rintro n ⟨n_prime, n_gt_two⟩
+  rcases Nat.Prime.eq_two_or_odd n_prime with n_two | n_odd
+  -- primo caso
+    -- "ci basta dimostrare l'assurdo"
+  · exfalso
+    rw [mem_setOf] at n_gt_two
+    linarith
+  -- secondo caso
+  · rw [mem_setOf]
+    rw [Nat.even_iff]
+    linarith
 
 #print Prime
 
@@ -197,7 +220,23 @@ example : (⋂ i, A i ∩ B i) = (⋂ i, A i) ∩ ⋂ i, B i := by
 
 
 example : (s ∪ ⋂ i, A i) = ⋂ i, A i ∪ s := by
-  sorry
+  ext x
+  simp only [mem_iInter]
+  constructor
+  rintro (xs | h)
+  intro i
+  right
+  exact xs
+  intro i
+  simp at h
+  left
+  exact h i
+  intro h
+  rcases Classical.em (x ∈ s) with xs | xns
+  left
+  exact xs
+  simp [xns] at *
+  exact h
 
 def primes : Set ℕ :=
   { x | Nat.Prime x }

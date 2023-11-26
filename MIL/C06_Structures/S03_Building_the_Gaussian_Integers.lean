@@ -120,8 +120,12 @@ instance instCommRing : CommRing gaussInt where
   mul_comm := by
     intros
     ext <;> simp <;> ring
-  zero_mul := sorry
-  mul_zero := sorry
+  zero_mul := by
+    intro
+    ext <;> simp
+  mul_zero := by
+    intro
+    ext <;> simp
 
 @[simp]
 theorem sub_re (x y : gaussInt) : (x - y).re = x.re - y.re :=
@@ -175,7 +179,10 @@ end Int
 
 theorem sq_add_sq_eq_zero {α : Type*} [LinearOrderedRing α] (x y : α) :
     x ^ 2 + y ^ 2 = 0 ↔ x = 0 ∧ y = 0 := by
-  sorry
+    -- rw [pow_two]
+    -- rw [mul_self_add_mul_self_eq_zero]
+    -- rw [add_eq_zero_iff' (sq_nonneg x) (sq_nonneg y)]
+    -- repeat rw [sq_eq_zero_iff]
 namespace gaussInt
 
 def norm (x : gaussInt) :=
@@ -183,13 +190,20 @@ def norm (x : gaussInt) :=
 
 @[simp]
 theorem norm_nonneg (x : gaussInt) : 0 ≤ norm x := by
-  sorry
+  rw [norm]
+  apply add_nonneg <;> apply sq_nonneg
 theorem norm_eq_zero (x : gaussInt) : norm x = 0 ↔ x = 0 := by
-  sorry
+  rw [norm, sq_add_sq_eq_zero]
+  rw [zero_def]
+  rw [gaussInt.ext_iff]
 theorem norm_pos (x : gaussInt) : 0 < norm x ↔ x ≠ 0 := by
-  sorry
+  rw [lt_iff_le_and_ne, ne_comm, Ne, norm_eq_zero]
+  simp only [norm_nonneg]
+  tauto
 theorem norm_mul (x y : gaussInt) : norm (x * y) = norm x * norm y := by
-  sorry
+  simp only [norm]
+  rw [mul_def]
+  ring
 def conj (x : gaussInt) : gaussInt :=
   ⟨x.re, -x.im⟩
 

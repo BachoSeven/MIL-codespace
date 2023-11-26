@@ -23,17 +23,23 @@ def sbFun (x : α) : β :=
   if x ∈ sbSet f g then f x else invFun g x
 
 theorem sb_right_inv {x : α} (hx : x ∉ sbSet f g) : g (invFun g x) = x := by
-  have : x ∈ g '' univ := by
+  have l1: x ∈ g '' univ := by
     contrapose! hx
     rw [sbSet, mem_iUnion]
     use 0
     rw [sbAux, mem_diff]
-    sorry
-  have : ∃ y, g y = x := by
-    sorry
-  sorry
+    constructor
+    apply mem_univ
+    exact hx
+  have l2: ∃ y, g y = x := by
+    rw [mem_image] at l1
+    rcases l1 with ⟨a, b⟩
+    use a
+    exact b.2
+  apply invFun_eq
+  exact l2
 
-theorem sb_injective (hf : Injective f) (hg : Injective g) : Injective (sbFun f g) := by
+theorem sb_injective (hf : Injective f) : Injective (sbFun f g) := by
   set A := sbSet f g with A_def
   set h := sbFun f g with h_def
   intro x₁ x₂
@@ -50,17 +56,27 @@ theorem sb_injective (hf : Injective f) (hg : Injective g) : Injective (sbFun f 
       rw [if_pos x₁A, if_neg x₂nA] at hxeq
       rw [A_def, sbSet, mem_iUnion] at x₁A
       have x₂eq : x₂ = g (f x₁) := by
-        sorry
+        rcases xA with _ | b
+        rw [A_def] at x₂nA
+        apply_fun g at hxeq
+        rw [sb_right_inv f g x₂nA] at hxeq
+        exact hxeq.symm
+        exfalso
+        exact x₂nA b
       rcases x₁A with ⟨n, hn⟩
       rw [A_def, sbSet, mem_iUnion]
       use n + 1
       simp [sbAux]
       exact ⟨x₁, hn, x₂eq.symm⟩
-    sorry
-  push_neg  at xA
-  sorry
+    rw [if_pos x₁A, if_pos x₂A] at hxeq
+    exact hf hxeq
+  push_neg at xA
+  rw [if_neg xA.1, if_neg xA.2] at hxeq
+  apply_fun g at hxeq
+  rw [sb_right_inv f g xA.1, sb_right_inv f g xA.2] at hxeq
+  exact hxeq
 
-theorem sb_surjective (hf : Injective f) (hg : Injective g) : Surjective (sbFun f g) := by
+theorem sb_surjective (hg : Injective g) : Surjective (sbFun f g) := by
   set A := sbSet f g with A_def
   set h := sbFun f g with h_def
   intro y
@@ -77,13 +93,16 @@ theorem sb_surjective (hf : Injective f) (hg : Injective g) : Surjective (sbFun 
       exact ⟨n, xmem⟩
     simp only [h_def, sbFun, if_pos this]
     exact hg hx
-  sorry
+  use (g y)
+  rw [h_def, sbFun, if_neg gyA]
+  apply_fun g
+  rw [sb_right_inv f g gyA]
 
 end
 
 theorem schroeder_bernstein {f : α → β} {g : β → α} (hf : Injective f) (hg : Injective g) :
     ∃ h : α → β, Bijective h :=
-  ⟨sbFun f g, sb_injective f g hf hg, sb_surjective f g hf hg⟩
+  ⟨sbFun f g, sb_injective f g hf, sb_surjective f g hg⟩
 
 -- Auxiliary information
 section
